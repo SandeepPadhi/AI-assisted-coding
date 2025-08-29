@@ -43,7 +43,7 @@ def main():
         print("\n🔧 Troubleshooting:")
         print("1. Make sure you're in a virtual environment: source venv/bin/activate")
         print("2. Install dependencies: pip install -r requirements.txt")
-        print("3. Try running: python3 web_app.py")
+        print("3. Try running: python3 web_app.py
 
 if __name__ == "__main__":
     main()
