@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Users - Chat App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-users"></i> All Users</h2>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+
+        {% if all_users %}
+            <div class="row">
+                {% for user in all_users %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body d-flex flex-column">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="fas fa-user-circle fa-2x text-primary me-3"></i>
+                                    <div class="flex-grow-1">
+                                        <h5 class="card-title mb-1">{{ user.username }}</h5>
+                                        <small class="text-muted">
+                                            Member since {{ user.created_at | date }}
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <div class="mt-auto">
+                                    {% if user.user_id == session.user_id %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-star"></i> You
+                                        </span>
+                                    {% else %}
+                                        <a href="{{ url_for('chat_with_user', user_id=user.user_id) }}"
+                                           class="btn btn-primary btn-sm w-100">
+                                            <i class="fas fa-comment"></i> Start Chat
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Statistics -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Statistics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h3 class="text-primary">{{ stats.total_users }}</h3>
+                                <p class="text-muted mb-0">Total Users</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h3 class="text-success">{{ stats.new_this_week }}</h3>
+                                <p class="text-muted mb-0">New This Week</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h3 class="text-info">{{ stats.new_today }}</h3>
+                                <p class="text-muted mb-0">New Today</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h3 class="text-warning">{{ stats.can_chat_with }}</h3>
+                            <p class="text-muted mb-0">Can Chat With</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No users found</h4>
+                <p class="text-muted">This shouldn't happen - you should see yourself here!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

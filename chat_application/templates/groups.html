@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Groups - Chat App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-user-friends"></i> Groups</h2>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+                <i class="fas fa-plus"></i> Create Group
+            </button>
+        </div>
+
+        <!-- My Groups -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list"></i> My Groups</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Group functionality is coming soon! For now, you can create groups and they'll be available in future updates.
+                </div>
+                <div class="text-center py-3">
+                    <i class="fas fa-user-friends fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No groups yet</h5>
+                    <p class="text-muted">Create your first group to get started!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Public Groups -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-globe"></i> Public Groups</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success">
+                    <i class="fas fa-lightbulb"></i>
+                    <strong>Pro Tip:</strong> Groups allow multiple people to chat together.
+                    Perfect for team discussions, study groups, or just hanging out with friends!
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                <h6>Study Groups</h6>
+                                <p class="text-muted small">Collaborate on projects and share knowledge</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-gamepad fa-2x text-success mb-2"></i>
+                                <h6>Gaming Groups</h6>
+                                <p class="text-muted small">Find teammates and discuss strategies</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-heart fa-2x text-danger mb-2"></i>
+                                <h6>Social Groups</h6>
+                                <p class="text-muted small">Connect with friends and make new ones</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Group Modal -->
+<div class="modal fade" id="createGroupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-plus"></i> Create New Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('create_group') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="group_name" class="form-label">
+                            <i class="fas fa-tag"></i> Group Name
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               id="group_name"
+                               name="group_name"
+                               required
+                               minlength="3"
+                               maxlength="50"
+                               placeholder="Enter group name">
+                        <div class="form-text">3-50 characters. Choose something descriptive!</div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        You'll be the admin of this group and can add other members.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Create Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Features Info -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-star"></i> Group Features</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-crown text-warning"></i> Admin Controls</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> Add/remove members</li>
+                            <li><i class="fas fa-check text-success"></i> Delete messages</li>
+                            <li><i class="fas fa-check text-success"></i> Manage group settings</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-users text-primary"></i> Member Features</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> Send messages</li>
+                            <li><i class="fas fa-check text-success"></i> Edit own messages</li>
+                            <li><i class="fas fa-check text-success"></i> Leave group anytime</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

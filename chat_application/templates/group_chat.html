@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Group Chat - Chat App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Group Header -->
+        <div class="card mb-3">
+            <div class="card-header d-flex align-items-center">
+                <i class="fas fa-user-friends fa-2x text-success me-3"></i>
+                <div>
+                    <h5 class="mb-0">Group Chat #{{ group_id[:8] }}</h5>
+                    <small class="text-muted">Group conversation</small>
+                </div>
+                <div class="ms-auto">
+                    <a href="{{ url_for('groups') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Group Messages -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-comments"></i> Group Messages</h6>
+                <span class="badge bg-success">Coming Soon</span>
+            </div>
+            <div class="card-body">
+                <div class="text-center py-5">
+                    <i class="fas fa-tools fa-3x text-warning mb-3"></i>
+                    <h5 class="text-muted">Group Chat Feature</h5>
+                    <p class="text-muted">This feature is under development and will be available soon!</p>
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-list-check"></i> Planned Features:</h6>
+                        <ul class="text-start">
+                            <li>Real-time group messaging</li>
+                            <li>Member management (add/remove)</li>
+                            <li>Group admin controls</li>
+                            <li>Message history and search</li>
+                            <li>File sharing capabilities</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Group Info -->
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-info-circle"></i> Group Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Group ID:</strong> {{ group_id }}</p>
+                        <p><strong>Status:</strong> <span class="badge bg-warning">Under Development</span></p>
+                        <p><strong>Created:</strong> Real-time</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-users"></i> Members</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-light">
+                            <i class="fas fa-user"></i> You ({{ session.username }}) - Admin
+                        </div>
+                        <p class="text-muted small">Member management features coming soon!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -724,11 +724,15 @@ class ChatApplication:
     def create_user(self, username: str) -> User:
         """Creates a new user."""
         return self._user_manager.create_user(username)
-    
+
+    def get_user_by_id(self, user_id: UUID) -> Optional[User]:
+        """Gets a user by their ID."""
+        return self._user_manager.get_user_by_id(user_id)
+
     def get_user_by_username(self, username: str) -> Optional[User]:
         """Gets a user by their username."""
         return self._user_manager.get_user_by_username(username)
-    
+
     def get_all_users(self) -> List[User]:
         """Gets all users in the system."""
         return self._user_manager.get_all_users()
@@ -788,98 +792,810 @@ class ChatApplication:
         """Deletes a group message."""
         self._group_manager.delete_group_message(message_id, user_id)
 
+class InteractiveChat:
+    """Interactive command-line interface for the chat application"""
+
+    def __init__(self):
+        self.app = ChatApplication()
+        self.current_user = None
+
+    def display_welcome(self):
+        """Display welcome message and main menu"""
+        print("\n" + "="*60)
+        print("🎉 WELCOME TO INTERACTIVE CHAT APPLICATION 🎉")
+        print("="*60)
+        if self.current_user:
+            print(f"📱 Logged in as: {self.current_user.username}")
+        else:
+            print("❌ Not logged in")
+        print()
+
+    def show_main_menu(self):
+        """Display main menu options"""
+        print("📋 MAIN MENU")
+        print("-" * 30)
+
+        if not self.current_user:
+            print("1. 🔐 Login/Create Account")
+            print("2. 👥 View All Users")
+            print("3. 📊 System Statistics")
+            print("4. 🚪 Exit")
+        else:
+            print("1. 💬 Direct Messages")
+            print("2. 👥 Group Chats")
+            print("3. 👤 Account Management")
+            print("4. 📊 System Statistics")
+            print("5. 🚪 Logout")
+            print("6. ❌ Exit")
+
+        print()
+
+    def handle_login_menu(self):
+        """Handle login/create account menu"""
+        while True:
+            print("\n🔐 LOGIN MENU")
+            print("-" * 20)
+            print("1. 📝 Create New Account")
+            print("2. 🔑 Login to Existing Account")
+            print("3. 🔙 Back to Main Menu")
+            print()
+
+            choice = input("Choose an option (1-3): ").strip()
+
+            if choice == "1":
+                self.create_account()
+            elif choice == "2":
+                self.login_account()
+            elif choice == "3":
+                break
+            else:
+                print("❌ Invalid choice. Please try again.")
+
+    def create_account(self):
+        """Create a new user account"""
+        print("\n📝 CREATE NEW ACCOUNT")
+        print("-" * 25)
+
+        while True:
+            username = input("Enter username (3-50 characters): ").strip()
+
+            if not username:
+                print("❌ Username cannot be empty.")
+                continue
+
+            try:
+                user = self.app.create_user(username)
+                print(f"✅ Account created successfully!")
+                print(f"   Username: {user.username}")
+                print(f"   User ID: {user.user_id}")
+                print(f"   Created: {user.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+
+                # Auto-login after creation
+                self.current_user = user
+                print(f"🔓 Auto-logged in as {username}")
+                break
+            except ValueError as e:
+                print(f"❌ Error: {e}")
+
+    def login_account(self):
+        """Login to existing account"""
+        print("\n🔑 LOGIN TO ACCOUNT")
+        print("-" * 20)
+
+        username = input("Enter username: ").strip()
+
+        if not username:
+            print("❌ Username cannot be empty.")
+            return
+
+        user = self.app.get_user_by_username(username)
+        if user:
+            self.current_user = user
+            print(f"✅ Successfully logged in as {username}!")
+        else:
+            print(f"❌ User '{username}' not found.")
+            choice = input("Would you like to create this account? (y/n): ").strip().lower()
+            if choice == 'y':
+                self.create_account()
+
+    def show_direct_messages_menu(self):
+        """Show direct messages menu"""
+        while True:
+            print("\n💬 DIRECT MESSAGES")
+            print("-" * 20)
+            print("1. 📤 Send Message")
+            print("2. 📥 View Message History")
+            print("3. ✏️  Edit Message")
+            print("4. 🗑️  Delete Message")
+            print("5. 🔙 Back to Main Menu")
+            print()
+
+            choice = input("Choose an option (1-5): ").strip()
+
+            if choice == "1":
+                self.send_direct_message()
+            elif choice == "2":
+                self.view_message_history()
+            elif choice == "3":
+                self.edit_direct_message()
+            elif choice == "4":
+                self.delete_direct_message()
+            elif choice == "5":
+                break
+            else:
+                print("❌ Invalid choice. Please try again.")
+
+    def send_direct_message(self):
+        """Send a direct message to another user"""
+        print("\n📤 SEND DIRECT MESSAGE")
+        print("-" * 25)
+
+        # Show available users
+        users = self.app.get_all_users()
+        if len(users) <= 1:
+            print("❌ No other users available to message.")
+            return
+
+        print("Available users:")
+        for i, user in enumerate(users, 1):
+            if user.user_id != self.current_user.user_id:
+                print(f"  {i}. {user.username}")
+        print()
+
+        try:
+            recipient_username = input("Enter recipient username: ").strip()
+            if not recipient_username:
+                print("❌ Recipient username cannot be empty.")
+                return
+
+            recipient = self.app.get_user_by_username(recipient_username)
+            if not recipient:
+                print(f"❌ User '{recipient_username}' not found.")
+                return
+
+            if recipient.user_id == self.current_user.user_id:
+                print("❌ You cannot send messages to yourself.")
+                return
+
+            content = input("Enter message: ").strip()
+            if not content:
+                print("❌ Message cannot be empty.")
+                return
+
+            message = self.app.send_message(self.current_user.user_id, recipient.user_id, content)
+            print("✅ Message sent successfully!")
+            print(f"   To: {recipient.username}")
+            print(f"   Content: '{message.content}'")
+            print(f"   Status: {message.status.value}")
+            print(f"   Time: {message.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+
+        except Exception as e:
+            print(f"❌ Error sending message: {e}")
+
+    def view_message_history(self):
+        """View message history with another user"""
+        print("\n📥 VIEW MESSAGE HISTORY")
+        print("-" * 25)
+
+        users = self.app.get_all_users()
+        if len(users) <= 1:
+            print("❌ No other users available.")
+            return
+
+        print("Available users:")
+        other_users = [u for u in users if u.user_id != self.current_user.user_id]
+        for i, user in enumerate(other_users, 1):
+            print(f"  {i}. {user.username}")
+        print()
+
+        try:
+            recipient_username = input("Enter username to view history with: ").strip()
+            if not recipient_username:
+                print("❌ Username cannot be empty.")
+                return
+
+            recipient = self.app.get_user_by_username(recipient_username)
+            if not recipient:
+                print(f"❌ User '{recipient_username}' not found.")
+                return
+
+            messages = self.app.get_message_history(self.current_user.user_id, recipient.user_id)
+
+            if not messages:
+                print(f"📭 No messages found between you and {recipient.username}.")
+                return
+
+            print(f"\n💬 Message History with {recipient.username}")
+            print("-" * 40)
+
+            for i, msg in enumerate(messages, 1):
+                sender_name = "You" if msg.sender_id == self.current_user.user_id else recipient.username
+                status_icon = "✏️" if msg.status == MessageStatus.EDITED else "🗑️" if msg.status == MessageStatus.DELETED else "💬"
+                print(f"{i}. [{msg.created_at.strftime('%H:%M:%S')}] {sender_name}: '{msg.content}' {status_icon}")
+
+        except Exception as e:
+            print(f"❌ Error viewing message history: {e}")
+
+    def edit_direct_message(self):
+        """Edit a direct message"""
+        print("\n✏️ EDIT DIRECT MESSAGE")
+        print("-" * 22)
+
+        # First show recent messages to choose from
+        try:
+            # Get all users and their recent messages
+            users = self.app.get_all_users()
+            recent_messages = []
+
+            for user in users:
+                if user.user_id != self.current_user.user_id:
+                    messages = self.app.get_message_history(self.current_user.user_id, user.user_id)
+                    # Get only messages sent by current user
+                    user_messages = [msg for msg in messages if msg.sender_id == self.current_user.user_id]
+                    recent_messages.extend(user_messages[-3:])  # Last 3 messages
+
+            if not recent_messages:
+                print("❌ No messages found to edit.")
+                return
+
+            print("Your recent messages:")
+            for i, msg in enumerate(recent_messages, 1):
+                recipient_name = "Unknown"
+                for user in users:
+                    if user.user_id != self.current_user.user_id:
+                        if msg.receiver_id == user.user_id:
+                            recipient_name = user.username
+                            break
+                print(f"  {i}. To {recipient_name}: '{msg.content}' ({msg.status.value})")
+            print()
+
+            choice = input("Enter message number to edit (or 'cancel'): ").strip()
+            if choice.lower() == 'cancel':
+                return
+
+            try:
+                msg_index = int(choice) - 1
+                if 0 <= msg_index < len(recent_messages):
+                    selected_msg = recent_messages[msg_index]
+                    new_content = input("Enter new message content: ").strip()
+
+                    if not new_content:
+                        print("❌ New content cannot be empty.")
+                        return
+
+                    self.app.edit_message(selected_msg.message_id, new_content, self.current_user.user_id)
+                    print("✅ Message edited successfully!")
+                else:
+                    print("❌ Invalid message number.")
+            except ValueError:
+                print("❌ Invalid input. Please enter a number.")
+
+        except Exception as e:
+            print(f"❌ Error editing message: {e}")
+
+    def delete_direct_message(self):
+        """Delete a direct message"""
+        print("\n🗑️ DELETE DIRECT MESSAGE")
+        print("-" * 25)
+
+        # Similar to edit - show recent messages
+        try:
+            users = self.app.get_all_users()
+            recent_messages = []
+
+            for user in users:
+                if user.user_id != self.current_user.user_id:
+                    messages = self.app.get_message_history(self.current_user.user_id, user.user_id)
+                    user_messages = [msg for msg in messages if msg.sender_id == self.current_user.user_id]
+                    recent_messages.extend(user_messages[-3:])
+
+            if not recent_messages:
+                print("❌ No messages found to delete.")
+                return
+
+            print("Your recent messages:")
+            for i, msg in enumerate(recent_messages, 1):
+                recipient_name = "Unknown"
+                for user in users:
+                    if user.user_id != self.current_user.user_id:
+                        if msg.receiver_id == user.user_id:
+                            recipient_name = user.username
+                            break
+                print(f"  {i}. To {recipient_name}: '{msg.content}' ({msg.status.value})")
+            print()
+
+            choice = input("Enter message number to delete (or 'cancel'): ").strip()
+            if choice.lower() == 'cancel':
+                return
+
+            try:
+                msg_index = int(choice) - 1
+                if 0 <= msg_index < len(recent_messages):
+                    selected_msg = recent_messages[msg_index]
+                    self.app.delete_message(selected_msg.message_id, self.current_user.user_id)
+                    print("✅ Message deleted successfully!")
+                else:
+                    print("❌ Invalid message number.")
+            except ValueError:
+                print("❌ Invalid input. Please enter a number.")
+
+        except Exception as e:
+            print(f"❌ Error deleting message: {e}")
+
+    def show_groups_menu(self):
+        """Show group chats menu"""
+        while True:
+            print("\n👥 GROUP CHATS")
+            print("-" * 15)
+            print("1. 📝 Create Group")
+            print("2. ➕ Join Group")
+            print("3. 👥 View My Groups")
+            print("4. 💬 Send Group Message")
+            print("5. 📜 View Group Messages")
+            print("6. 👤 Manage Members")
+            print("7. ⚙️ Group Settings")
+            print("8. 🔙 Back to Main Menu")
+            print()
+
+            choice = input("Choose an option (1-8): ").strip()
+
+            if choice == "1":
+                self.create_group()
+            elif choice == "2":
+                self.join_group()
+            elif choice == "3":
+                self.view_my_groups()
+            elif choice == "4":
+                self.send_group_message()
+            elif choice == "5":
+                self.view_group_messages()
+            elif choice == "6":
+                self.manage_group_members()
+            elif choice == "7":
+                self.group_settings()
+            elif choice == "8":
+                break
+            else:
+                print("❌ Invalid choice. Please try again.")
+
+    def create_group(self):
+        """Create a new group"""
+        print("\n📝 CREATE GROUP")
+        print("-" * 15)
+
+        try:
+            group_name = input("Enter group name: ").strip()
+            if not group_name:
+                print("❌ Group name cannot be empty.")
+                return
+
+            group = self.app.create_group(group_name, self.current_user.user_id)
+            print("✅ Group created successfully!")
+            print(f"   Name: {group.name}")
+            print(f"   Group ID: {group.group_id}")
+            print(f"   Creator: {self.current_user.username} (Admin)")
+
+        except Exception as e:
+            print(f"❌ Error creating group: {e}")
+
+    def join_group(self):
+        """Join an existing group"""
+        print("\n➕ JOIN GROUP")
+        print("-" * 12)
+
+        # This would require a way to discover groups
+        # For now, we'll ask for group ID
+        print("Note: You need the Group ID to join a group.")
+        print("Ask the group admin for the Group ID.")
+        print()
+
+        group_id_str = input("Enter Group ID: ").strip()
+        if not group_id_str:
+            print("❌ Group ID cannot be empty.")
+            return
+
+        try:
+            group_id = UUID(group_id_str)
+            # For demo purposes, assume we want to join this group
+            # In a real app, you'd have group discovery
+
+            print("Note: To join a group, you need to be added by an admin.")
+            print("Please ask a group admin to add you using your username:")
+            print(f"Your username: {self.current_user.username}")
+
+        except ValueError:
+            print("❌ Invalid Group ID format.")
+
+    def view_my_groups(self):
+        """View groups the user belongs to"""
+        print("\n👥 MY GROUPS")
+        print("-" * 12)
+
+        try:
+            # Get user's groups - this would require a method to get groups by user
+            # For now, we'll show a placeholder
+            print("Feature coming soon: View your groups")
+            print("This would show all groups you're a member of.")
+
+        except Exception as e:
+            print(f"❌ Error viewing groups: {e}")
+
+    def send_group_message(self):
+        """Send a message to a group"""
+        print("\n💬 SEND GROUP MESSAGE")
+        print("-" * 22)
+
+        group_id_str = input("Enter Group ID: ").strip()
+        if not group_id_str:
+            print("❌ Group ID cannot be empty.")
+            return
+
+        try:
+            group_id = UUID(group_id_str)
+            content = input("Enter message: ").strip()
+
+            if not content:
+                print("❌ Message cannot be empty.")
+                return
+
+            message = self.app.send_group_message(group_id, self.current_user.user_id, content)
+            print("✅ Group message sent successfully!")
+            print(f"   Content: '{message.content}'")
+
+        except ValueError as e:
+            print(f"❌ Invalid input: {e}")
+        except Exception as e:
+            print(f"❌ Error sending group message: {e}")
+
+    def view_group_messages(self):
+        """View messages in a group"""
+        print("\n📜 VIEW GROUP MESSAGES")
+        print("-" * 23)
+
+        group_id_str = input("Enter Group ID: ").strip()
+        if not group_id_str:
+            print("❌ Group ID cannot be empty.")
+            return
+
+        try:
+            group_id = UUID(group_id_str)
+            messages = self.app.get_group_messages(group_id, self.current_user.user_id)
+
+            if not messages:
+                print("📭 No messages in this group.")
+                return
+
+            print("\n💬 Group Messages")
+            print("-" * 20)
+
+            # Get user info for sender names
+            users = self.app.get_all_users()
+            user_map = {u.user_id: u.username for u in users}
+
+            for msg in messages:
+                sender_name = user_map.get(msg.sender_id, "Unknown")
+                status_icon = "✏️" if msg.status == MessageStatus.EDITED else "🗑️" if msg.status == MessageStatus.DELETED else "💬"
+                print(f"[{msg.created_at.strftime('%H:%M:%S')}] {sender_name}: '{msg.content}' {status_icon}")
+
+        except ValueError as e:
+            print(f"❌ Invalid input: {e}")
+        except Exception as e:
+            print(f"❌ Error viewing group messages: {e}")
+
+    def manage_group_members(self):
+        """Manage group members (add/remove)"""
+        print("\n👤 MANAGE GROUP MEMBERS")
+        print("-" * 23)
+
+        group_id_str = input("Enter Group ID: ").strip()
+        if not group_id_str:
+            print("❌ Group ID cannot be empty.")
+            return
+
+        try:
+            group_id = UUID(group_id_str)
+
+            while True:
+                print("\nMember Management Options:")
+                print("1. ➕ Add Member")
+                print("2. ➖ Remove Member")
+                print("3. 📋 View Members")
+                print("4. 🔙 Back")
+                print()
+
+                choice = input("Choose an option (1-4): ").strip()
+
+                if choice == "1":
+                    username = input("Enter username to add: ").strip()
+                    if username:
+                        user = self.app.get_user_by_username(username)
+                        if user:
+                            self.app.add_group_member(group_id, user.user_id, self.current_user.user_id)
+                            print(f"✅ Added {username} to group!")
+                        else:
+                            print(f"❌ User '{username}' not found.")
+                elif choice == "2":
+                    username = input("Enter username to remove: ").strip()
+                    if username:
+                        user = self.app.get_user_by_username(username)
+                        if user:
+                            self.app.remove_group_member(group_id, user.user_id, self.current_user.user_id)
+                            print(f"✅ Removed {username} from group!")
+                        else:
+                            print(f"❌ User '{username}' not found.")
+                elif choice == "3":
+                    print("Feature coming soon: View group members")
+                elif choice == "4":
+                    break
+                else:
+                    print("❌ Invalid choice.")
+
+        except ValueError as e:
+            print(f"❌ Invalid input: {e}")
+        except Exception as e:
+            print(f"❌ Error managing members: {e}")
+
+    def group_settings(self):
+        """Group settings and administration"""
+        print("\n⚙️ GROUP SETTINGS")
+        print("-" * 17)
+
+        group_id_str = input("Enter Group ID: ").strip()
+        if not group_id_str:
+            print("❌ Group ID cannot be empty.")
+            return
+
+        try:
+            group_id = UUID(group_id_str)
+
+            while True:
+                print("\nGroup Settings:")
+                print("1. 🚪 Leave Group")
+                print("2. 🗑️ Delete Group")
+                print("3. 🔙 Back")
+                print()
+
+                choice = input("Choose an option (1-3): ").strip()
+
+                if choice == "1":
+                    confirm = input("Are you sure you want to leave this group? (y/n): ").strip().lower()
+                    if confirm == 'y':
+                        self.app.leave_group(group_id, self.current_user.user_id)
+                        print("✅ Left group successfully!")
+                        break
+                elif choice == "2":
+                    confirm = input("Are you sure you want to DELETE this group? This action cannot be undone. (y/n): ").strip().lower()
+                    if confirm == 'y':
+                        self.app.delete_group(group_id, self.current_user.user_id)
+                        print("✅ Group deleted successfully!")
+                        break
+                elif choice == "3":
+                    break
+                else:
+                    print("❌ Invalid choice.")
+
+        except ValueError as e:
+            print(f"❌ Invalid input: {e}")
+        except Exception as e:
+            print(f"❌ Error: {e}")
+
+    def show_account_menu(self):
+        """Show account management menu"""
+        while True:
+            print("\n👤 ACCOUNT MANAGEMENT")
+            print("-" * 22)
+            print("1. 👀 View Profile")
+            print("2. 📊 My Statistics")
+            print("3. 🔙 Back to Main Menu")
+            print()
+
+            choice = input("Choose an option (1-3): ").strip()
+
+            if choice == "1":
+                self.view_profile()
+            elif choice == "2":
+                self.view_statistics()
+            elif choice == "3":
+                break
+            else:
+                print("❌ Invalid choice. Please try again.")
+
+    def view_profile(self):
+        """View current user profile"""
+        print("\n👀 PROFILE INFORMATION")
+        print("-" * 23)
+        print(f"Username: {self.current_user.username}")
+        print(f"User ID: {self.current_user.user_id}")
+        print(f"Created: {self.current_user.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"Account Age: {(datetime.now() - self.current_user.created_at).days} days")
+
+    def view_statistics(self):
+        """View user statistics"""
+        print("\n📊 YOUR STATISTICS")
+        print("-" * 18)
+
+        try:
+            # This would require additional methods to track statistics
+            print("Feature coming soon: Personal statistics")
+            print("- Messages sent")
+            print("- Groups joined")
+            print("- Active conversations")
+            print("- Account activity")
+
+        except Exception as e:
+            print(f"❌ Error viewing statistics: {e}")
+
+    def show_statistics(self):
+        """Show system-wide statistics"""
+        print("\n📊 SYSTEM STATISTICS")
+        print("-" * 20)
+
+        try:
+            users = self.app.get_all_users()
+            print(f"👥 Total Users: {len(users)}")
+
+            # Count messages (this would require new methods)
+            print("💬 Total Messages: Feature coming soon")
+            print("👥 Total Groups: Feature coming soon")
+            print("📈 Messages Today: Feature coming soon")
+
+        except Exception as e:
+            print(f"❌ Error viewing statistics: {e}")
+
+    def run(self):
+        """Main application loop"""
+        print("\n🚀 Starting Interactive Chat Application...")
+
+        while True:
+            self.display_welcome()
+            self.show_main_menu()
+
+            if not self.current_user:
+                choice = input("Choose an option (1-4): ").strip()
+                if choice == "1":
+                    self.handle_login_menu()
+                elif choice == "2":
+                    users = self.app.get_all_users()
+                    if users:
+                        print("\n👥 ALL USERS")
+                        print("-" * 12)
+                        for user in users:
+                            print(f"  • {user.username} (joined {user.created_at.strftime('%Y-%m-%d')})")
+                    else:
+                        print("❌ No users found.")
+                elif choice == "3":
+                    self.show_statistics()
+                elif choice == "4":
+                    print("👋 Goodbye!")
+                    break
+                else:
+                    print("❌ Invalid choice. Please try again.")
+            else:
+                choice = input("Choose an option (1-6): ").strip()
+                if choice == "1":
+                    self.show_direct_messages_menu()
+                elif choice == "2":
+                    self.show_groups_menu()
+                elif choice == "3":
+                    self.show_account_menu()
+                elif choice == "4":
+                    self.show_statistics()
+                elif choice == "5":
+                    self.current_user = None
+                    print("🔓 Successfully logged out!")
+                elif choice == "6":
+                    print("👋 Goodbye!")
+                    break
+                else:
+                    print("❌ Invalid choice. Please try again.")
+
+
 def main():
-    # Example usage
-    print("=== Chat Application Demo ===\n")
-    chat_app = ChatApplication()
+    """Main function - runs either demo or interactive mode"""
+    print("Choose mode:")
+    print("1. 🎮 Interactive Mode (Recommended)")
+    print("2. 📊 Demo Mode")
+    print()
 
-    # Create users
-    print("1. Creating users...")
-    alice = chat_app.create_user("Alice")
-    print(f"   ✓ Created user: {alice.username} (ID: {alice.user_id})")
+    choice = input("Enter your choice (1-2): ").strip()
 
-    bob = chat_app.create_user("Bob")
-    print(f"   ✓ Created user: {bob.username} (ID: {bob.user_id})")
+    if choice == "1":
+        chat = InteractiveChat()
+        chat.run()
+    elif choice == "2":
+        # Original demo code
+        print("=== Chat Application Demo ===\n")
+        chat_app = ChatApplication()
 
-    charlie = chat_app.create_user("Charlie")
-    print(f"   ✓ Created user: {charlie.username} (ID: {charlie.user_id})")
+        # Create users
+        print("1. Creating users...")
+        alice = chat_app.create_user("Alice")
+        print(f"   ✓ Created user: {alice.username} (ID: {alice.user_id})")
 
-    print(f"\n   Total users: {len(chat_app.get_all_users())}\n")
+        bob = chat_app.create_user("Bob")
+        print(f"   ✓ Created user: {bob.username} (ID: {bob.user_id})")
 
-    # Direct messaging
-    print("2. Direct messaging...")
-    message = chat_app.send_message(alice.user_id, bob.user_id, "Hello Bob!")
-    print(f"   ✓ Alice sent: '{message.content}'")
+        charlie = chat_app.create_user("Charlie")
+        print(f"   ✓ Created user: {charlie.username} (ID: {charlie.user_id})")
 
-    reply = chat_app.send_message(bob.user_id, alice.user_id, "Hi Alice!")
-    print(f"   ✓ Bob sent: '{reply.content}'")
+        print(f"\n   Total users: {len(chat_app.get_all_users())}\n")
 
-    # View message history
-    print("\n3. Viewing message history between Alice and Bob...")
-    messages = chat_app.get_message_history(alice.user_id, bob.user_id)
-    for i, msg in enumerate(messages, 1):
-        sender = "Alice" if msg.sender_id == alice.user_id else "Bob"
-        print(f"   {i}. {sender}: '{msg.content}' ({msg.status.value})")
+        # Direct messaging
+        print("2. Direct messaging...")
+        message = chat_app.send_message(alice.user_id, bob.user_id, "Hello Bob!")
+        print(f"   ✓ Alice sent: '{message.content}'")
 
-    # Edit and delete messages
-    print("\n4. Editing and deleting messages...")
-    chat_app.edit_message(message.message_id, "Hello Bob! How are you?", alice.user_id)
-    print(f"   ✓ Alice edited message to: '{message.content}'")
+        reply = chat_app.send_message(bob.user_id, alice.user_id, "Hi Alice!")
+        print(f"   ✓ Bob sent: '{reply.content}'")
 
-    chat_app.delete_message(message.message_id, alice.user_id)
-    print("   ✓ Alice deleted the message")
-    # Group chat
-    print("\n5. Creating group chat...")
-    group = chat_app.create_group("Fun Group", alice.user_id)
-    print(f"   ✓ Created group: '{group.name}' (ID: {group.group_id})")
+        # View message history
+        print("\n3. Viewing message history between Alice and Bob...")
+        messages = chat_app.get_message_history(alice.user_id, bob.user_id)
+        for i, msg in enumerate(messages, 1):
+            sender = "Alice" if msg.sender_id == alice.user_id else "Bob"
+            print(f"   {i}. {sender}: '{msg.content}' ({msg.status.value})")
 
-    print("   Adding members...")
-    chat_app.add_group_member(group.group_id, bob.user_id, alice.user_id)
-    print(f"   ✓ Added Bob to '{group.name}'")
+        # Edit and delete messages
+        print("\n4. Editing and deleting messages...")
+        chat_app.edit_message(message.message_id, "Hello Bob! How are you?", alice.user_id)
+        print(f"   ✓ Alice edited message to: '{message.content}'")
 
-    chat_app.add_group_member(group.group_id, charlie.user_id, alice.user_id)
-    print(f"   ✓ Added Charlie to '{group.name}'")
+        chat_app.delete_message(message.message_id, alice.user_id)
+        print("   ✓ Alice deleted the message")
+        # Group chat
+        print("\n5. Creating group chat...")
+        group = chat_app.create_group("Fun Group", alice.user_id)
+        print(f"   ✓ Created group: '{group.name}' (ID: {group.group_id})")
 
-    # Group messaging
-    print("\n6. Group messaging...")
-    group_msg = chat_app.send_group_message(group.group_id, alice.user_id, "Welcome everyone!")
-    print(f"   ✓ Alice sent to group: '{group_msg.content}'")
+        print("   Adding members...")
+        chat_app.add_group_member(group.group_id, bob.user_id, alice.user_id)
+        print(f"   ✓ Added Bob to '{group.name}'")
 
-    group_reply = chat_app.send_group_message(group.group_id, bob.user_id, "Thanks for adding me!")
-    print(f"   ✓ Bob sent to group: '{group_reply.content}'")
+        chat_app.add_group_member(group.group_id, charlie.user_id, alice.user_id)
+        print(f"   ✓ Added Charlie to '{group.name}'")
 
-    # View group messages
-    print(f"\n7. Viewing messages in '{group.name}'...")
-    group_messages = chat_app.get_group_messages(group.group_id, charlie.user_id)
-    for i, msg in enumerate(group_messages, 1):
-        sender = "Alice" if msg.sender_id == alice.user_id else "Bob"
-        print(f"   {i}. {sender}: '{msg.content}' ({msg.status.value})")
+        # Group messaging
+        print("\n6. Group messaging...")
+        group_msg = chat_app.send_group_message(group.group_id, alice.user_id, "Welcome everyone!")
+        print(f"   ✓ Alice sent to group: '{group_msg.content}'")
 
-    # Edit and delete group messages
-    print("\n8. Editing and deleting group messages...")
-    chat_app.edit_group_message(group_msg.message_id, "Welcome to the group!", alice.user_id)
-    print(f"   ✓ Alice edited group message to: '{group_msg.content}'")
+        group_reply = chat_app.send_group_message(group.group_id, bob.user_id, "Thanks for adding me!")
+        print(f"   ✓ Bob sent to group: '{group_reply.content}'")
 
-    chat_app.delete_group_message(group_msg.message_id, alice.user_id)
-    print("   ✓ Alice deleted the group message")
-    # Group management
-    print("\n9. Group management...")
-    chat_app.remove_group_member(group.group_id, charlie.user_id, alice.user_id)
-    print(f"   ✓ Removed Charlie from '{group.name}'")
+        # View group messages
+        print(f"\n7. Viewing messages in '{group.name}'...")
+        group_messages = chat_app.get_group_messages(group.group_id, charlie.user_id)
+        for i, msg in enumerate(group_messages, 1):
+            sender = "Alice" if msg.sender_id == alice.user_id else "Bob"
+            print(f"   {i}. {sender}: '{msg.content}' ({msg.status.value})")
 
-    chat_app.leave_group(group.group_id, bob.user_id)
-    print(f"   ✓ Bob left '{group.name}'")
+        # Edit and delete group messages
+        print("\n8. Editing and deleting group messages...")
+        chat_app.edit_group_message(group_msg.message_id, "Welcome to the group!", alice.user_id)
+        print(f"   ✓ Alice edited group message to: '{group_msg.content}'")
 
-    chat_app.delete_group(group.group_id, alice.user_id)
-    print(f"   ✓ Alice deleted '{group.name}'")
+        chat_app.delete_group_message(group_msg.message_id, alice.user_id)
+        print("   ✓ Alice deleted the group message")
+        # Group management
+        print("\n9. Group management...")
+        chat_app.remove_group_member(group.group_id, charlie.user_id, alice.user_id)
+        print(f"   ✓ Removed Charlie from '{group.name}'")
 
-    print("\n=== Demo completed successfully! ===")
-    print("\nAll features demonstrated:")
-    print("✓ User creation and management")
-    print("✓ Direct messaging (send, view, edit, delete)")
-    print("✓ Group creation and member management")
-    print("✓ Group messaging (send, view, edit, delete)")
-    print("✓ Group administration (add, remove, leave, delete)")
+        chat_app.leave_group(group.group_id, bob.user_id)
+        print(f"   ✓ Bob left '{group.name}'")
+
+        chat_app.delete_group(group.group_id, alice.user_id)
+        print(f"   ✓ Alice deleted '{group.name}'")
+
+        print("\n=== Demo completed successfully! ===")
+        print("\nAll features demonstrated:")
+        print("✓ User creation and management")
+        print("✓ Direct messaging (send, view, edit, delete)")
+        print("✓ Group creation and member management")
+        print("✓ Group messaging (send, view, edit, delete)")
+        print("✓ Group administration (add, remove, leave, delete)")
+    else:
+        print("❌ Invalid choice. Exiting...")
 
 if __name__ == "__main__":
     main()
