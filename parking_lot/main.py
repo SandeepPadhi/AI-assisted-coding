@@ -22,6 +22,7 @@ Design guidelines:
 - Respository function names should be self-explanatory.
 - YOu can use repository class to store different entities and then extend it to in-memory or other storage systems.
 - Do not use generics for now but create different abstractions for different entities.
+- Each entity should be able to handle its invariants and validations and business logic.
 """
 
 from abc import ABC, abstractmethod
