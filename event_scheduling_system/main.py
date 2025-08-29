@@ -29,6 +29,10 @@ Design Guidelines Implemented:
 - Descriptive function names with type hints
 - No external libraries used
 - Modular, maintainable, and debuggable code
+
+
+
+Implement minimal viable implementation first and then add more features and functionalities when prompted
 """
 
 from datetime import datetime, timedelta
