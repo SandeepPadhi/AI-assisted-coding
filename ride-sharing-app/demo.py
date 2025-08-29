@@ -124,6 +124,7 @@ def main() -> None:
     print("   - Ride 3: John Doe's additional ride (8 km) - created for payment demo")
     print("💡 This demonstrates how the same user can have multiple rides with different payment methods\n")
 
+
     # Get bills for all trips
     bill1 = system.get_trip_bill(ride1.trip_id)
     bill2 = system.get_trip_bill(ride2.trip_id)

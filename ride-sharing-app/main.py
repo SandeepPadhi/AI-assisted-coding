@@ -73,7 +73,8 @@ HOW TO USE:
 
 1. Run the demo:
    python3 demo.py
-   (Note: Demo creates 2 initial rides + 1 additional ride to showcase different payment methods)
+   (Note: Demo creates 2 initial rides + 1 additional ride to showcase different payment methods.
+    This results in 3 bills total to demonstrate Cash, Credit Card, and UPI payments.)
 
 2. Use the system programmatically:
    from orchestrator import RideSharingAppSystem
