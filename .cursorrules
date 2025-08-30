@@ -1,48 +1,196 @@
-"""
-CursorRule for LLD Interview Python Projects
+# .cursorrules — The Ultimate LLD Pair-Programming Interview Guide
 
-Guidelines:
-1. Always divide the project into the following layers:
-   - Entities: Core business objects with their invariants and business logic.
-   - Entity Managers: Handle business operations and rules for entities.
-   - Repositories: Abstract base classes and in-memory implementations for entity storage. Design so they can be extended for other storage (e.g., MySQL).
-   - External Services: For integrations like payments, notifications, etc. Use abstract base classes and in-memory/mock implementations.
-   - System Orchestrator: The main class that coordinates managers, repositories, and services.
+> Purpose: A single-file guide you can drop into any LLD interview repo or workspace. It encodes the *CursorRule* process — how you divide problems, what to deliver first, and how to behave during AI pair-programming or live LLD interviews.
 
-2. Start every new project with a minimal viable implementation that covers the core requirements and demonstrates the architecture.
-
-3. After the minimal implementation, always prompt the user:
-   "Would you like to add more complexity or features to the project? (e.g., new entity, service, validation, etc.)"
-
-4. Strictly follow OOP principles:
-   - Use encapsulation, abstraction, and single responsibility.
-   - Use abstract base classes for repositories and services.
-   - Use descriptive and targeted function names.
-   - Each class should have a clear, single responsibility.
-
-5. After implementation, always analyze the code and output a brief section:
-   - "Analysis & Improvements:"
-   - List areas for improvement (e.g., extensibility, error handling, design patterns, testability).
-   - Ask the user if they want to improve any of these areas.
-
-6. Use type hints for all functions and methods.
-
-7. Do not use generics or external libraries unless explicitly requested.
-
-8. Keep the code modular, readable, and easy to maintain.
-
-9. For each new feature or complexity, repeat the process: implement minimally, prompt for more, analyze, and improve as needed.
-
-10. Always keep the code in a single file unless the user requests otherwise.
-
-
-11. Always divide the project into 4 parts and layout to the user. Then ask the user to execute it phase by phase. then iterate it to improve it.
-
-
-12. While creating classes and their parameter, add in the comment the reason for doing so.
-
-13. Never override the doc string in main.py file in any project.
-
-14. Always keep changes limited to 300lines at a time. So, always break the problems into multiple phases atleast 4-5 , then work with the user and proceed ahead.
 ---
 
+## Quick summary
+
+* Follow a **4-part phased workflow** for every project (Minimal → Expand → Harden → Polish & Tests).
+* Always split code into the prescribed **layers**: *Entities*, *Entity Managers*, *Repositories*, *External Services*, and *System Orchestrator*.
+* Keep changes **≤300 lines** per iteration; break larger tasks into 4–5 phases.
+* Start with a **minimal viable implementation** that demonstrates architecture and passes basic manual checks.
+* After each implementation: present **Analysis & Improvements** and ask whether to add more complexity.
+
+Always discuss the phases first and your plan first and only then start with implementation after agreement is reached.
+---
+
+## The 4 Parts (mandatory flow — present to interviewer and follow it)
+
+1. **Part 1 – Minimal Viable Implementation (MVI)**
+
+   * Implement core entities, a simple in-memory repository for each entity, a manager with 1–2 operations, and a system orchestrator that demonstrates usage.
+   * Keep total changes ≤300 lines.
+   * Deliverables: `entities/`, `repositories/in_memory/`, `managers/`, `orchestrator.py`, `README.md` with usage example.
+
+2. **Part 2 – Add One Feature / Complexity/ validations **
+
+   * Add one new entity, a validation rule, an external service mock, or a new repository backend abstraction. Implement only the minimal changes necessary.
+   * Deliverables: new class file(s), unit example, updated orchestrator demo.
+
+3. **Part 3 – Harden (Error handling & design patterns)**
+
+   * Add robust error handling, explicit invariants, typed exceptions, input validation, and docstrings. Improve repository interfaces and introduce small design patterns (Factory, Strategy) only if justified.
+   * Deliverables: `errors.py`, enriched docstrings, and improved unit-like scripts.
+
+4. **Part 4 – Polish & Tests**
+
+   * Add simple unit tests (pytests style or hand-rolled), README usage examples, and any performance considerations or trade-offs.
+   * Deliverables: `tests/`, `README.md` updated with examples and edge cases, and `Analysis & Improvements` section.
+
+> After finishing each part, **always ask**: *"Would you like to add more complexity or features to the project? (e.g., new entity, service, validation, etc.)"*
+
+---
+
+## Mandatory layering rules
+
+1. **Entities** — single responsibility: store data + basic invariants and helper methods.
+
+   * Each `Entity` file must have short comments above the class listing *why each parameter exists* and what invariants are enforced.
+   * Example: `class User:  # id: unique identifier; name: display name; is_active: prevents borrowing when False`
+
+2. **Entity Managers** — orchestrate business rules involving entities. They use repositories and external services but do not manipulate persistence details.
+
+   * Every manager exposes small, descriptive methods like `create_user`, `borrow_book`, `return_book`.
+
+3. **Repositories** — abstract base classes first, then in-memory implementations.
+
+   * Methods should be self-explanatory: `save(entity)`, `get_by_id(id)`, `list(filters...)`, `delete(id)`.
+   * Keep repository interfaces narrow — one responsibility per method.
+
+4. **External Services** — abstract interfaces + simple mocks.
+
+   * Examples: `PaymentGateway`, `NotificationService`. Always provide a `Mock` or `InMemory` implementation for interviews.
+
+5. **System Orchestrator** — single place to wire managers, repositories and services for demos.
+
+   * Provide a minimal `run_demo()` showing core flows.
+
+
+6. When i say , its complete, you should always add documentation of your code and explain your design decisions.
+
+---
+
+## Coding & design constraints
+
+* Use **type hints everywhere** (functions, methods, variables). No generics.
+* Use **abstract base classes** (`abc.ABC`) for Repositories and External Services.
+* **Encapsulation**: prefer private attributes for internal state and expose small public APIs.
+* **Descriptive names** for classes and methods. Avoid abbreviations unless they are standard.
+* **Single Responsibility** per class.
+* Keep methods short and focused.
+* **No external libraries** unless explicitly requested.
+
+---
+
+## File-structure template (example project: `library_system`)
+
+```
+library_system/
+├─ entities/
+│  ├─ user.py
+│  ├─ book.py
+│  └─ loan.py
+├─ managers/
+│  ├─ user_manager.py
+│  ├─ book_manager.py
+│  └─ loan_manager.py
+├─ repositories/
+│  ├─ base_repository.py
+│  └─ in_memory/
+│     ├─ user_repo.py
+│     └─ book_repo.py
+├─ services/
+│  ├─ notification.py
+│  └─ mock_notification.py
+├─ orchestrator.py
+├─ errors.py
+├─ README.md
+└─ tests/
+   └─ test_basic.py
+```
+
+---
+
+## Example `orchestrator.py` responsibilities
+
+* Wire singletons for in-memory repos and managers.
+* Provide `run_demo()` that executes a happy-path scenario and prints outcome.
+* Never contain business logic.
+
+---
+
+## Comments & parameter reasons (enforced habit)
+
+* Every class constructor param must have a comment above it that states **why** it exists and **what** constraints must hold.
+* Example inside `book.py`:
+
+```python
+class Book:
+    # id: unique id to identify the book across repositories
+    # title: human readable title used in UIs
+    # category: used for business rules like "reference-only"
+    # is_reference: true => cannot be borrowed
+    def __init__(self, id: str, title: str, category: str, is_reference: bool = False):
+        ...
+```
+
+---
+
+## Interview-friendly checklist (what to say & show during pair-programming)
+
+* State the **4-part plan** aloud before writing code.
+* Implement Part 1 in ≤300 lines, show working demo output in the orchestrator.
+* Explain where you'd extend each repository (e.g., MySQL adapter) and trade-offs.
+* When adding features, explicitly list impact surface: new entities, repository changes, manager changes, migration strategy.
+* Keep commits or changes small and explain why (maintainability, atomicity in reviews).
+* After every deliverable, read the **"Analysis & Improvements"** section and offer next steps.
+
+---
+
+## Analysis & Improvements (template to include after every iteration)
+
+* **Extensibility:** list which modules are easy/hard to extend.
+* **Error handling:** missing validations, exceptions that should be introduced.
+* **Testability:** where to add tests and which mocks to create.
+* **Performance:** note any potential hotspots and how to mitigate.
+* **Security & edge-cases:** concurrency, data races, sensitive information handling.
+
+*Always display this short analysis after each iteration and ask the user which item they'd like to tackle next.*
+
+---
+
+## Live interview behavioral rules (short)
+
+* Ask clarifying questions if requirements are ambiguous — BUT do so **briefly** and then implement a reasonable assumption.
+* When unsure, pick an assumption and **document** it in the repo/README; do not stall the interview.
+* Announce trade-offs aloud when choosing design patterns or data structures.
+* Keep the pairing partner involved: narrate what you're implementing and why.
+
+---
+
+## Practical prompts & snippets to copy during interview
+
+* **Plan prompt:** "I'll follow a 4-part plan: 1) minimal working design, 2) add one feature, 3) harden, 4) tests & polish. Sound good?"
+* **Small-change prompt:** "I'll keep each change under 300 lines and deliver Part 1 first — shall I start?"
+* **Assumption prompt:** "I assume X unless you tell me otherwise; I'll document this assumption in README. OK?"
+
+---
+
+## Example mini-checklist to paste in PR description
+
+* [ ] Implement entities with invariants
+* [ ] Add in-memory repositories and base interfaces
+* [ ] Provide manager methods for core actions
+* [ ] Wire orchestrator with a `run_demo()` showing happy-path
+* [ ] Add Analysis & Improvements section
+
+---
+
+## Final note & next step
+
+I implemented a compact, interview-ready `.cursorrules` that you can attach to any repo or paste into your workspace. **Follow the 4-part workflow** and **ask the interviewer before adding more complexity**.
+
+**Next:** Execute Part 1 (Minimal Viable Implementation). When you're ready say: *"Run Part 1: Minimal implementation for <project name>"* and I will output the exact file templates and code for the first ≤300 lines.
+
+Good luck — let's start cracking those LLD interviews! 🚀
