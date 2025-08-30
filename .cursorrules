@@ -1,0 +1,48 @@
+"""
+CursorRule for LLD Interview Python Projects
+
+Guidelines:
+1. Always divide the project into the following layers:
+   - Entities: Core business objects with their invariants and business logic.
+   - Entity Managers: Handle business operations and rules for entities.
+   - Repositories: Abstract base classes and in-memory implementations for entity storage. Design so they can be extended for other storage (e.g., MySQL).
+   - External Services: For integrations like payments, notifications, etc. Use abstract base classes and in-memory/mock implementations.
+   - System Orchestrator: The main class that coordinates managers, repositories, and services.
+
+2. Start every new project with a minimal viable implementation that covers the core requirements and demonstrates the architecture.
+
+3. After the minimal implementation, always prompt the user:
+   "Would you like to add more complexity or features to the project? (e.g., new entity, service, validation, etc.)"
+
+4. Strictly follow OOP principles:
+   - Use encapsulation, abstraction, and single responsibility.
+   - Use abstract base classes for repositories and services.
+   - Use descriptive and targeted function names.
+   - Each class should have a clear, single responsibility.
+
+5. After implementation, always analyze the code and output a brief section:
+   - "Analysis & Improvements:"
+   - List areas for improvement (e.g., extensibility, error handling, design patterns, testability).
+   - Ask the user if they want to improve any of these areas.
+
+6. Use type hints for all functions and methods.
+
+7. Do not use generics or external libraries unless explicitly requested.
+
+8. Keep the code modular, readable, and easy to maintain.
+
+9. For each new feature or complexity, repeat the process: implement minimally, prompt for more, analyze, and improve as needed.
+
+10. Always keep the code in a single file unless the user requests otherwise.
+
+
+11. Always divide the project into 4 parts and layout to the user. Then ask the user to execute it phase by phase. then iterate it to improve it.
+
+
+12. While creating classes and their parameter, add in the comment the reason for doing so.
+
+13. Never override the doc string in main.py file in any project.
+
+14. Always keep changes limited to 300lines at a time. So, always break the problems into multiple phases atleast 4-5 , then work with the user and proceed ahead.
+---
+
