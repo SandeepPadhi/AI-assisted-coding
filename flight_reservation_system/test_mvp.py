@@ -155,6 +155,30 @@ class TestFlightReservationMVP(unittest.TestCase):
             self.user_manager.register_new_user_in_system("U001", "John Doe", "invalid-email")
         
         self.assertIn("Invalid email format", str(context.exception))
+    
+    def test_get_all_bookings_for_user(self) -> None:
+        """Test getting all bookings for a user - user booking view functionality"""
+        # Arrange - Create user with multiple passengers and bookings
+        self.user_manager.register_new_user_in_system("U001", "John Doe", "john@example.com")
+        self.flight_manager.add_new_flight_to_system("F001", "AA123", "JFK", "LAX", 150)
+        self.flight_manager.add_new_flight_to_system("F002", "UA456", "JFK", "ORD", 200)
+        
+        # Create multiple passengers for the user
+        self.passenger_manager.register_new_passenger_for_user("P001", "U001", "John Doe", "US123456")
+        self.passenger_manager.register_new_passenger_for_user("P002", "U001", "Jane Doe", "US789012")
+        
+        # Create bookings for different passengers
+        self.booking_manager.create_new_booking_for_passenger("B001", "P001", "F001")
+        self.booking_manager.create_new_booking_for_passenger("B002", "P002", "F002")
+        
+        # Act
+        user_bookings = self.booking_manager.get_all_bookings_for_user("U001")
+        
+        # Assert
+        self.assertEqual(len(user_bookings), 2)
+        booking_ids = [booking.booking_id for booking in user_bookings]
+        self.assertIn("B001", booking_ids)
+        self.assertIn("B002", booking_ids)
 
 
 def run_mvp_tests() -> None:

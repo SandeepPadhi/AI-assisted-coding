@@ -554,6 +554,22 @@ class BookingManager:
         
         all_bookings = self._booking_repo.retrieve_all_entities_from_storage()
         return [booking for booking in all_bookings if booking.passenger_id == passenger_id]
+    
+    def get_all_bookings_for_user(self, user_id: str) -> List[Booking]:
+        """Get all bookings for a specific user (across all their passengers)"""
+        if not user_id or not user_id.strip():
+            raise ValidationError("user_id", "User ID cannot be empty")
+        
+        # Get all passengers for this user
+        all_passengers = self._passenger_repo.retrieve_all_entities_from_storage()
+        user_passenger_ids = [p.passenger_id for p in all_passengers if p.user_id == user_id]
+        
+        if not user_passenger_ids:
+            return []  # User has no passengers
+        
+        # Get all bookings for these passengers
+        all_bookings = self._booking_repo.retrieve_all_entities_from_storage()
+        return [booking for booking in all_bookings if booking.passenger_id in user_passenger_ids]
 
 
 # ============================================================================
@@ -619,40 +635,68 @@ class FlightReservationSystem:
         except Exception as e:
             print(f"   Error: {e}")
         
-        # Step 4: Register a passenger for the user
-        print("\n4. Registering a passenger...")
+        # Step 4: Register passengers for the user
+        print("\n4. Registering passengers...")
         try:
-            passenger_id = self.passenger_manager.register_new_passenger_for_user(
+            passenger_id1 = self.passenger_manager.register_new_passenger_for_user(
                 passenger_id="P001", user_id="U001", 
                 name="John Doe", passport_number="US123456"
             )
-            print(f"   Passenger registered with ID: {passenger_id}")
+            passenger_id2 = self.passenger_manager.register_new_passenger_for_user(
+                passenger_id="P002", user_id="U001", 
+                name="Jane Doe", passport_number="US789012"
+            )
+            print(f"   Passengers registered with IDs: {passenger_id1}, {passenger_id2}")
         except Exception as e:
             print(f"   Error: {e}")
         
-        # Step 5: Create a booking
-        print("\n5. Creating a booking...")
+        # Step 5: Create bookings
+        print("\n5. Creating bookings...")
         try:
-            booking_id = self.booking_manager.create_new_booking_for_passenger(
+            booking_id1 = self.booking_manager.create_new_booking_for_passenger(
                 booking_id="B001", passenger_id="P001", flight_id="F001"
             )
-            print(f"   Booking created with ID: {booking_id}")
+            booking_id2 = self.booking_manager.create_new_booking_for_passenger(
+                booking_id="B002", passenger_id="P002", flight_id="F002"
+            )
+            print(f"   Bookings created with IDs: {booking_id1}, {booking_id2}")
         except Exception as e:
             print(f"   Error: {e}")
         
-        # Step 6: View bookings for the passenger
-        print("\n6. Viewing bookings for passenger...")
+        # Step 6: View bookings for individual passengers
+        print("\n6. Viewing bookings for individual passengers...")
         try:
-            bookings = self.booking_manager.get_all_bookings_for_passenger("P001")
-            for booking in bookings:
+            bookings_p1 = self.booking_manager.get_all_bookings_for_passenger("P001")
+            print(f"   Passenger P001 has {len(bookings_p1)} bookings:")
+            for booking in bookings_p1:
                 flight = self.flight_manager.retrieve_flight_with_business_rules(booking.flight_id)
-                print(f"   Booking {booking.booking_id}: Flight {flight.flight_number} "
+                print(f"     Booking {booking.booking_id}: Flight {flight.flight_number} "
+                      f"({flight.source} → {flight.destination}) - Status: {booking.status}")
+            
+            bookings_p2 = self.booking_manager.get_all_bookings_for_passenger("P002")
+            print(f"   Passenger P002 has {len(bookings_p2)} bookings:")
+            for booking in bookings_p2:
+                flight = self.flight_manager.retrieve_flight_with_business_rules(booking.flight_id)
+                print(f"     Booking {booking.booking_id}: Flight {flight.flight_number} "
                       f"({flight.source} → {flight.destination}) - Status: {booking.status}")
         except Exception as e:
             print(f"   Error: {e}")
         
-        # Step 7: Demonstrate error handling
-        print("\n7. Demonstrating error handling...")
+        # Step 7: View all bookings for the user
+        print("\n7. Viewing all bookings for user...")
+        try:
+            user_bookings = self.booking_manager.get_all_bookings_for_user("U001")
+            print(f"   User U001 has {len(user_bookings)} total bookings:")
+            for booking in user_bookings:
+                flight = self.flight_manager.retrieve_flight_with_business_rules(booking.flight_id)
+                passenger = self.passenger_manager.retrieve_passenger_with_business_rules(booking.passenger_id)
+                print(f"     Booking {booking.booking_id}: {passenger.name} on Flight {flight.flight_number} "
+                      f"({flight.source} → {flight.destination}) - Status: {booking.status}")
+        except Exception as e:
+            print(f"   Error: {e}")
+        
+        # Step 8: Demonstrate error handling
+        print("\n8. Demonstrating error handling...")
         
         # Try to register duplicate user
         try:
