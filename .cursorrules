@@ -1,196 +1,342 @@
-# .cursorrules — The Ultimate LLD Pair-Programming Interview Guide
+# .cursorrules — MVP-First LLD Interview Guide
 
-> Purpose: A single-file guide you can drop into any LLD interview repo or workspace. It encodes the *CursorRule* process — how you divide problems, what to deliver first, and how to behave during AI pair-programming or live LLD interviews.
-
----
-
-## Quick summary
-
-* Follow a **4-part phased workflow** for every project (Minimal → Expand → Harden → Polish & Tests).
-* Always split code into the prescribed **layers**: *Entities*, *Entity Managers*, *Repositories*, *External Services*, and *System Orchestrator*.
-* Keep changes **≤300 lines** per iteration; break larger tasks into 4–5 phases.
-* Start with a **minimal viable implementation** that demonstrates architecture and passes basic manual checks.
-* After each implementation: present **Analysis & Improvements** and ask whether to add more complexity.
-
-Always discuss the phases first and your plan first and only then start with implementation after agreement is reached.
----
-
-## The 4 Parts (mandatory flow — present to interviewer and follow it)
-
-1. **Part 1 – Minimal Viable Implementation (MVI)**
-
-   * Implement core entities, a simple in-memory repository for each entity, a manager with 1–2 operations, and a system orchestrator that demonstrates usage.
-   * Keep total changes ≤300 lines.
-   * Deliverables: `entities/`, `repositories/in_memory/`, `managers/`, `orchestrator.py`, `README.md` with usage example.
-
-2. **Part 2 – Add One Feature / Complexity/ validations **
-
-   * Add one new entity, a validation rule, an external service mock, or a new repository backend abstraction. Implement only the minimal changes necessary.
-   * Deliverables: new class file(s), unit example, updated orchestrator demo.
-
-3. **Part 3 – Harden (Error handling & design patterns)**
-
-   * Add robust error handling, explicit invariants, typed exceptions, input validation, and docstrings. Improve repository interfaces and introduce small design patterns (Factory, Strategy) only if justified.
-   * Deliverables: `errors.py`, enriched docstrings, and improved unit-like scripts.
-
-4. **Part 4 – Polish & Tests**
-
-   * Add simple unit tests (pytests style or hand-rolled), README usage examples, and any performance considerations or trade-offs.
-   * Deliverables: `tests/`, `README.md` updated with examples and edge cases, and `Analysis & Improvements` section.
-
-> After finishing each part, **always ask**: *"Would you like to add more complexity or features to the project? (e.g., new entity, service, validation, etc.)"*
+> Purpose: Interview-optimized guide for AI-assisted LLD rounds. Emphasizes **minimal viable product** with **surgical changes** to avoid cascading modifications across the codebase.
 
 ---
 
-## Mandatory layering rules
+## Core Philosophy: MVP-First with Surgical Precision
 
-1. **Entities** — single responsibility: store data + basic invariants and helper methods.
-
-   * Each `Entity` file must have short comments above the class listing *why each parameter exists* and what invariants are enforced.
-   * Example: `class User:  # id: unique identifier; name: display name; is_active: prevents borrowing when False`
-
-2. **Entity Managers** — orchestrate business rules involving entities. They use repositories and external services but do not manipulate persistence details.
-
-   * Every manager exposes small, descriptive methods like `create_user`, `borrow_book`, `return_book`.
-
-3. **Repositories** — abstract base classes first, then in-memory implementations.
-
-   * Methods should be self-explanatory: `save(entity)`, `get_by_id(id)`, `list(filters...)`, `delete(id)`.
-   * Keep repository interfaces narrow — one responsibility per method.
-
-4. **External Services** — abstract interfaces + simple mocks.
-
-   * Examples: `PaymentGateway`, `NotificationService`. Always provide a `Mock` or `InMemory` implementation for interviews.
-
-5. **System Orchestrator** — single place to wire managers, repositories and services for demos.
-
-   * Provide a minimal `run_demo()` showing core flows.
-
-
-6. When i say , its complete, you should always add documentation of your code and explain your design decisions.
+**Primary Goals:**
+1. **Identify top 3-4 core features** that define the system's essence
+2. **Make minimal, isolated changes** that don't ripple across the entire codebase
+3. **Demonstrate architecture thinking** without over-engineering
+4. **Show incremental development** skills
 
 ---
 
-## Coding & design constraints
+## MANDATORY: Feature Prioritization Framework
 
-* Use **type hints everywhere** (functions, methods, variables). No generics.
-* Use **abstract base classes** (`abc.ABC`) for Repositories and External Services.
-* **Encapsulation**: prefer private attributes for internal state and expose small public APIs.
-* **Descriptive names** for classes and methods. Avoid abbreviations unless they are standard.
-* **Single Responsibility** per class.
-* Keep methods short and focused.
-* **No external libraries** unless explicitly requested.
+Before any coding, **always** identify and agree on:
 
----
-
-## File-structure template (example project: `library_system`)
-
+### Step 0: Feature Triage (30 seconds max)
 ```
-library_system/
-├─ entities/
-│  ├─ user.py
-│  ├─ book.py
-│  └─ loan.py
-├─ managers/
-│  ├─ user_manager.py
-│  ├─ book_manager.py
-│  └─ loan_manager.py
-├─ repositories/
-│  ├─ base_repository.py
-│  └─ in_memory/
-│     ├─ user_repo.py
-│     └─ book_repo.py
-├─ services/
-│  ├─ notification.py
-│  └─ mock_notification.py
-├─ orchestrator.py
-├─ errors.py
-├─ README.md
-└─ tests/
-   └─ test_basic.py
+Core Features (Must Have - MVP):
+1. [Primary entity creation/management]
+2. [Core business operation #1]
+3. [Core business operation #2]
+4. [Basic query/retrieval]
+
+Nice-to-Have (Post-MVP):
+- Advanced search/filtering
+- Complex business rules
+- Performance optimizations
+- Advanced error handling
 ```
 
----
-
-## Example `orchestrator.py` responsibilities
-
-* Wire singletons for in-memory repos and managers.
-* Provide `run_demo()` that executes a happy-path scenario and prints outcome.
-* Never contain business logic.
+**Example for Library System:**
+- Core: Create users, add books, borrow books, return books
+- Post-MVP: Late fees, reservations, search filters, admin dashboard
 
 ---
 
-## Comments & parameter reasons (enforced habit)
+## The 4-Part Workflow (Mandatory)
 
-* Every class constructor param must have a comment above it that states **why** it exists and **what** constraints must hold.
-* Example inside `book.py`:
+### Part 1: MVP Core (≤200 lines, 15-20 minutes)
+**Deliverables:**
+- 2-3 core entities with basic attributes only
+- 1 in-memory repository per entity (save, get_by_id, list_all only)
+- 1 manager with 2-3 core operations
+- Simple orchestrator with demo showing happy path
+- README with 5-line usage example
 
+**MVP Rules:**
+- No validations beyond null checks
+- No error handling beyond basic exceptions
+- No external services
+- No complex business rules
+
+### Part 2: Add ONE Strategic Feature (≤100 lines, 10 minutes)
+**Choose exactly ONE:**
+- Add one new entity with relationships
+- Add one business rule/validation
+- Add one external service mock
+- Add one query filter/search
+
+**Constraint:** Changes should touch ≤3 existing files
+
+### Part 3: Harden Core Paths (≤150 lines, 10 minutes)
+**Focus ONLY on MVP features:**
+- Add input validation for core operations
+- Add 3-5 custom exceptions
+- Add error handling for happy path scenarios
+- Add docstrings to public methods
+
+### Part 4: Minimal Testing (≤100 lines, 10 minutes)
+- 3-5 unit tests covering core happy paths
+- 1-2 error case tests
+- README with examples and trade-offs
+
+---
+
+## Layering Rules (Simplified for MVP)
+
+### 1. Entities (Data + Basic Invariants Only)
 ```python
-class Book:
-    # id: unique id to identify the book across repositories
-    # title: human readable title used in UIs
-    # category: used for business rules like "reference-only"
-    # is_reference: true => cannot be borrowed
-    def __init__(self, id: str, title: str, category: str, is_reference: bool = False):
-        ...
+class User:
+    # id: unique identifier for user lookup
+    # name: display name for user interface
+    # is_active: prevents operations when False (business rule)
+    def __init__(self, id: str, name: str, is_active: bool = True):
+        if not id or not name:  # Only basic null checks in MVP
+            raise ValueError("ID and name required")
+        self.id = id
+        self.name = name
+        self.is_active = is_active
+```
+
+### 2. Repositories (Minimal Interface with Specific Names)
+```python
+# MVP Repository Interface (only 4 methods max with targeted names)
+class BaseRepository(ABC):
+    @abstractmethod
+    def save_entity_to_storage(self, entity) -> None: pass
+    
+    @abstractmethod
+    def find_entity_by_unique_id(self, id: str): pass
+    
+    @abstractmethod
+    def retrieve_all_entities_from_storage(self) -> List: pass
+    
+    @abstractmethod
+    def remove_entity_by_id(self, id: str) -> bool: pass
+```
+
+### 3. Managers (2-3 Core Operations Max)
+- Focus on top 3 business operations only
+- No complex business logic in MVP
+- Return simple success/failure indicators
+
+### 4. Orchestrator (Demo Only)
+- Wire 2-3 managers
+- Show 1 complete user journey
+- Print results for manual verification
+
+---
+
+## Surgical Change Principles
+
+### 1. Isolation Rules
+- **New features = New files** when possible
+- **Modify existing files** only for direct dependencies
+- **Avoid touching more than 3 files** per iteration
+
+### 2. Change Impact Analysis (say this aloud)
+Before each change, state:
+```
+"This change will:
+- Add [X] new files
+- Modify [Y] existing files: [list them]
+- Impact [Z] other components: [list them]
+- Estimated lines: [number]"
+```
+
+### 3. Extension Points (Design for Future)
+Always mention but don't implement:
+```python
+# Extension points for post-MVP:
+# - Repository.find_by_criteria() for advanced search
+# - Manager.validate_business_rules() for complex rules
+# - External services integration layer
 ```
 
 ---
 
-## Interview-friendly checklist (what to say & show during pair-programming)
+## MVP Code Patterns
 
-* State the **4-part plan** aloud before writing code.
-* Implement Part 1 in ≤300 lines, show working demo output in the orchestrator.
-* Explain where you'd extend each repository (e.g., MySQL adapter) and trade-offs.
-* When adding features, explicitly list impact surface: new entities, repository changes, manager changes, migration strategy.
-* Keep commits or changes small and explain why (maintainability, atomicity in reviews).
-* After every deliverable, read the **"Analysis & Improvements"** section and offer next steps.
+### Pattern 1: Minimal Entity Design
+```python
+# MVP: Basic attributes only
+class Book:
+    def __init__(self, id: str, title: str, available: bool = True):
+        self.id = id
+        self.title = title
+        self.available = available
+
+# Post-MVP: Rich domain model
+# - ISBN, author, category, publication_date
+# - Business rules, validation methods
+```
+
+### Pattern 2: Staged Repository Evolution
+```python
+# Part 1: Basic CRUD (specific action names)
+class InMemoryBookRepository:
+    def save_book_to_catalog(self, book): pass
+    def find_book_by_id(self, book_id): pass
+    def get_all_books_in_catalog(self): pass
+
+# Part 2: Add ONE specific query method
+def find_all_available_books_for_borrowing(self): pass
+
+# Part 3: Add error handling
+# Part 4: Add interface compliance tests
+```
+
+### Pattern 3: Manager Growth Strategy
+```python
+# Part 1: Happy path only (ultra-specific names)
+def attempt_book_borrowing_for_user(self, user_id: str, book_id: str) -> bool:
+    user = self.user_repo.find_user_by_id(user_id)
+    book = self.book_repo.find_book_by_id(book_id)
+    # Simple assignment
+    return True
+
+def process_book_return_from_user(self, user_id: str, book_id: str) -> bool:
+    # Mark book as available
+    return True
+
+# Part 2: Add ONE business rule
+def attempt_book_borrowing_with_availability_check(self, user_id: str, book_id: str) -> bool:
+    # Add availability verification
+    
+# Part 3: Add error handling and validation
+# Part 4: Add detailed return status
+```
 
 ---
 
-## Analysis & Improvements (template to include after every iteration)
+## Interview Communication Framework
 
-* **Extensibility:** list which modules are easy/hard to extend.
-* **Error handling:** missing validations, exceptions that should be introduced.
-* **Testability:** where to add tests and which mocks to create.
-* **Performance:** note any potential hotspots and how to mitigate.
-* **Security & edge-cases:** concurrency, data races, sensitive information handling.
+### Opening (30 seconds)
+"I'll use a 4-part MVP approach with explicit design patterns:
+1. **Core MVP** with 3-4 essential features using Repository and Service Layer patterns
+2. **Add one strategic feature** using appropriate design pattern (Strategy/Factory/etc.)
+3. **Harden the core paths** with validation patterns
+4. **Add basic tests** with Test Fixture patterns
 
-*Always display this short analysis after each iteration and ask the user which item they'd like to tackle next.*
+Each part ≤200 lines with surgical changes and documented patterns. Sound good?"
 
----
+### During Implementation
+- **Narrate assumptions**: "I'm assuming X for MVP, we can extend later"
+- **State change scope**: "This touches 2 files, adds 1 new class"
+- **Highlight extension points**: "Here's where we'd add [advanced feature] post-MVP"
+- **Declare design patterns**: "I'm using Repository Pattern here for data abstraction, and Service Layer Pattern for business logic"
+- **Justify pattern choices**: "Repository gives us testability but adds abstraction - good trade-off for this system"
 
-## Live interview behavioral rules (short)
+### After Each Part
+"Here's what we accomplished and potential next steps:
 
-* Ask clarifying questions if requirements are ambiguous — BUT do so **briefly** and then implement a reasonable assumption.
-* When unsure, pick an assumption and **document** it in the repo/README; do not stall the interview.
-* Announce trade-offs aloud when choosing design patterns or data structures.
-* Keep the pairing partner involved: narrate what you're implementing and why.
+**Analysis & Improvements:**
+- **Extensibility**: Easy to add [X], harder to add [Y]
+- **Missing**: [Validation/Error handling/Performance]
+- **Trade-offs**: [Simplicity vs Features]
 
----
-
-## Practical prompts & snippets to copy during interview
-
-* **Plan prompt:** "I'll follow a 4-part plan: 1) minimal working design, 2) add one feature, 3) harden, 4) tests & polish. Sound good?"
-* **Small-change prompt:** "I'll keep each change under 300 lines and deliver Part 1 first — shall I start?"
-* **Assumption prompt:** "I assume X unless you tell me otherwise; I'll document this assumption in README. OK?"
-
----
-
-## Example mini-checklist to paste in PR description
-
-* [ ] Implement entities with invariants
-* [ ] Add in-memory repositories and base interfaces
-* [ ] Provide manager methods for core actions
-* [ ] Wire orchestrator with a `run_demo()` showing happy-path
-* [ ] Add Analysis & Improvements section
+Should we add more complexity or move to the next part?"
 
 ---
 
-## Final note & next step
+## Anti-Patterns to Avoid (Common LLM Mistakes)
 
-I implemented a compact, interview-ready `.cursorrules` that you can attach to any repo or paste into your workspace. **Follow the 4-part workflow** and **ask the interviewer before adding more complexity**.
+❌ **Over-implementing**: Don't build what wasn't asked for
+❌ **Premature abstraction**: No interfaces until Part 3
+❌ **Cascade changes**: Don't modify 10 files for 1 feature
+❌ **Perfect code syndrome**: MVP should be "good enough"
+❌ **All-at-once implementation**: Always deliver incrementally
 
-**Next:** Execute Part 1 (Minimal Viable Implementation). When you're ready say: *"Run Part 1: Minimal implementation for <project name>"* and I will output the exact file templates and code for the first ≤300 lines.
+✅ **Do instead**: Implement minimum, show it works, ask for next step
 
-Good luck — let's start cracking those LLD interviews! 🚀
+---
+
+## Quick Reference: MVP Decision Tree
+
+```
+New requirement comes up:
+├─ Is it one of the top 3-4 core features?
+│  ├─ Yes → Implement minimally in current part
+│  └─ No → Add to "Post-MVP" list, mention as extension point
+└─ Does it require changing >3 files?
+   ├─ Yes → Break into smaller sub-features
+   └─ No → Proceed with surgical implementation
+```
+
+---
+
+## File Templates for Quick Start
+
+### Template: Entity with MVP Comments
+```python
+# Design Pattern: Value Object / Entity
+# Purpose: Represent core business concept with basic invariants
+# Implementation: Data class with constructor validation
+# Trade-offs: Simplicity vs rich domain methods
+class EntityName:
+    # param1: why this exists and what constraint
+    # param2: business purpose and validation rule
+    def __init__(self, param1: Type, param2: Type):
+        # Basic null/empty checks only in MVP
+        self.param1 = param1
+        self.param2 = param2
+        
+    # Extension point: add validation_method() post-MVP (Strategy Pattern)
+```
+
+### Template: Manager with MVP Operations
+```python
+# Design Pattern: Application Service / Service Layer
+# Purpose: Coordinate business workflows across multiple repositories
+# Implementation: Stateless service with dependency injection
+# Trade-offs: Clear separation of concerns vs potential over-abstraction
+class EntityManager:
+    def __init__(self, entity_repo: BaseRepository):
+        self._entity_repo = entity_repo
+    
+    def register_new_entity_in_system(self, **kwargs) -> str:
+        # Happy path implementation only
+        # Pattern: Template Method (structure defined, details filled)
+        pass
+    
+    def retrieve_entity_with_business_rules(self, id: str):
+        # Basic retrieval with domain logic
+        # Pattern: Specification Pattern (extension point for complex queries)
+        pass
+    
+    # Extension point: add complex_business_workflow() post-MVP (Command Pattern)
+```
+
+---
+
+## Success Metrics for Interview
+
+✅ **Part 1 Complete**: Working demo in ≤20 minutes
+✅ **Clean Architecture**: Clear separation of concerns
+✅ **Incremental Delivery**: Each part builds naturally on previous
+✅ **Extension Awareness**: Can explain what comes next
+✅ **Change Control**: Never modify >300 lines per iteration
+
+---
+
+## Emergency Shortcuts (if time pressure)
+
+If running behind schedule:
+1. **Skip Part 4** (tests) and focus on working demo
+2. **Combine Parts 2+3** into "Add feature + basic error handling"
+3. **Hardcode configuration** instead of building config systems
+4. **Use print statements** instead of proper logging
+5. **Document shortcuts** in README as "Production TODOs"
+
+---
+
+## Pre-Interview Mental Checklist
+
+Before starting any LLD interview:
+- [ ] Understand the top 3-4 core features
+- [ ] Plan the 4-part approach
+- [ ] Know which files you'll create in Part 1
+- [ ] Identify 2-3 potential "Part 2" features
+- [ ] Practice saying the change impact analysis
+
+**Remember**: MVP is about proving you can architect and deliver incrementally, not about building production-ready software.
+
+---
+
+*Good luck with your interviews. Focus on demonstrating systematic thinking and controlled development over flashy features.*
